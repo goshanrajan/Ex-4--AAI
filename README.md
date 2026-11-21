@@ -22,25 +22,48 @@ Step 8:Calculate the probability of the observed sequence by summing the last ro
 Step 9:Find the most likely sequence of hidden states by selecting the hidden state with the highest probability at each time step based on the alpha matrix.<br>
 
 ## Program:
-```
-
+```py
 import numpy as np
-transition_matrix = np.array([[0.7, 0.3],[0.4, 0.6]])
-emission_matrix = np.array([[0.1, 0.9],[0.8,0.2]])
+
+states = np.array(["Sunny", "Rainy"])
+transition_matrix = np.array([[0.7, 0.3], [0.4, 0.6]])
+emission_matrix = np.array([[0.1, 0.9], [0.8, 0.2]])
 initial_prob = np.array([0.5, 0.5])
-obs_seq = np.array([1,1,1,0,0,1])
-alpha = np.zeros((len(obs_seq),len(initial_prob)))
-alpha[0, :] = initial_prob * emission_matrix[:, obs_seq[0]]
-for t in range(1, len(obs_seq)):
-    for j in range(len(initial_prob)):
-        alpha[t, j] = emission_matrix[j,
-…    else:
-        most_likely.append("rainy")
+obs_seq = np.array([1, 1, 1, 0, 0, 1])
+
+# Viterbi algorithm
+num_states = len(initial_prob)
+num_observations = len(obs_seq)
+viterbi = np.zeros((num_observations, num_states))
+back_pointers = np.zeros((num_observations, num_states), dtype=int)
+
+viterbi[0, :] = initial_prob * emission_matrix[:, obs_seq[0]]
+
+for t in range(1, num_observations):
+    for j in range(num_states):
+        probabilities = viterbi[t - 1, :] * transition_matrix[:, j]
+        back_pointers[t, j] = np.argmax(probabilities)
+        viterbi[t, j] = (
+            probabilities[back_pointers[t, j]]
+            * emission_matrix[j, obs_seq[t]]
+        )
+
+# Backtrack the most likely state sequence
+state_path = np.zeros(num_observations, dtype=int)
+state_path[-1] = np.argmax(viterbi[-1, :])
+
+for t in range(num_observations - 2, -1, -1):
+    state_path[t] = back_pointers[t + 1, state_path[t + 1]]
+
+most_likely = states[state_path]
 print("The most likely sequence of weather is:", most_likely)
+
+
 ```
 
 ## Output:
-<img width="1058" height="86" alt="Screenshot 2026-08-04 112454" src="https://github.com/user-attachments/assets/85e2f525-8b37-4153-abac-d03368a0453e" />
+<img width="1210" height="105" alt="Screenshot 2026-11-21 085601" src="https://github.com/user-attachments/assets/9bad6e81-e245-47b6-9aa4-f1f88728c573" />
+
 
 
 
